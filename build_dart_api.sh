@@ -108,8 +108,7 @@ INCLUDE_ARGS=( -I"$PROTO_ROOT" )
 
 protoc \
 	"${INCLUDE_ARGS[@]}" \
-	--dart_out=grpc:"$OUT_DIR" \
-	"${PROTO_FILES[@]}"
+	--dart_out=grpc:"$OUT_DIR" 
 
 echo "Generation complete. Files under: $OUT_DIR"
 echo "Next steps:"
