@@ -55,8 +55,20 @@ rm -rf "$TMPDIR"
 # Remove original dart_api directory so only its contents remain
 rm -rf dart_api
 
+# Ensure pubspec.yaml is present and not ignored
+if [ ! -f pubspec.yaml ]; then
+  echo "Error: pubspec.yaml not found after copy." >&2
+  exit 1
+fi
+
 # Add and commit
-git add .
+git add . || true
+# If pubspec.yaml still not staged (possibly ignored), force add
+if ! git ls-files --error-unmatch pubspec.yaml >/dev/null 2>&1; then
+  echo "pubspec.yaml appears ignored. Forcing add." >&2
+  git add -f pubspec.yaml
+fi
+
 if git diff --cached --quiet; then
   echo "Nothing to commit after copy. Aborting." >&2
   exit 1
