@@ -52,40 +52,34 @@ LIB_DIR="$PACKAGE_ROOT/lib"
 SRC_DIR="$LIB_DIR/src"
 
 # Proto files to include (exclude vendor duplicates while still allowing vendor-only protos).
-# Previous logic included every .proto (including vendor duplicates) causing duplicate descriptor errors
-# like: CheckedExpr.reference_map already defined. We now:
-#  1. Collect all protos.
-#  2. If a proto exists both at api/path.proto and api/vendor/path.proto, prefer the non-vendor copy.
-#  3. Include vendor-only protos (no non-vendor counterpart) so generated code is complete.
-#  4. Allow override via INCLUDE_VENDOR_DUPLICATES=1.
+# Updated implementation avoids Bash 4 associative arrays for macOS / older bash compatibility.
+# Strategy:
+#  1. Collect non-vendor protos first; record their relative import paths.
+#  2. Add vendor protos only if there is no non-vendor counterpart.
+#  3. Allow override with INCLUDE_VENDOR_DUPLICATES=1 to include everything.
 PROTO_FILES=()
 if [[ "${INCLUDE_VENDOR_DUPLICATES:-0}" == "1" ]]; then
 	while IFS= read -r file; do PROTO_FILES+=("$file"); done < <(find "$PROTO_ROOT" -type f -name '*.proto' | sort)
 else
-	# Build associative map of chosen files keyed by import path.
-	declare -A chosen
-	# First pass: prefer non-vendor files.
+	NON_VENDOR_KEYS_FILE=$(mktemp)
+	# First pass: non-vendor protos
 	while IFS= read -r file; do
 		rel="${file#"$PROTO_ROOT/"}"
-		# Skip vendor path in first pass.
 		[[ $rel == vendor/* ]] && continue
-		chosen["$rel"]="$file"
+		PROTO_FILES+=("$file")
+		echo "$rel" >> "$NON_VENDOR_KEYS_FILE"
 	done < <(find "$PROTO_ROOT" -type f -name '*.proto' | sort)
-	# Second pass: add vendor-only files (no non-vendor duplicate).
+	# Second pass: vendor-only protos
 	if [[ -d "$VENDOR_DIR" ]]; then
 		while IFS= read -r file; do
-			rel="${file#"$PROTO_ROOT/"}"
-			[[ $rel != vendor/* ]] && continue
-			import_path="${rel#vendor/}"
-			if [[ -z "${chosen[$import_path]:-}" ]]; then
-				chosen["$import_path"]="$file"
+			rel="${file#"$VENDOR_DIR/"}"
+			# Include only if not present among non-vendor protos
+			if ! grep -Fxq "$rel" "$NON_VENDOR_KEYS_FILE"; then
+				PROTO_FILES+=("$file")
 			fi
 		done < <(find "$VENDOR_DIR" -type f -name '*.proto' | sort)
 	fi
-	# Emit in sorted order by key (import path) for determinism.
-	for k in $(printf '%s\n' "${!chosen[@]}" | sort); do
-		PROTO_FILES+=("${chosen[$k]}")
-	done
+	rm -f "$NON_VENDOR_KEYS_FILE" || true
 fi
 
 if [[ ${#PROTO_FILES[@]} -eq 0 ]]; then
