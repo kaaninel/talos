@@ -101,7 +101,7 @@ YAML
 fi
 
 echo "Generating Dart sources into $OUT_DIR"
-protoc -I "$PROTO_ROOT" --dart_out=grpc:"$OUT_DIR" 
+protoc -I "$PROTO_ROOT" $(find "$PROTO_ROOT" -iname "*.proto") --dart_out=grpc:"$OUT_DIR"
 
 echo "Generation complete. Files under: $OUT_DIR"
 echo "Next steps:"
