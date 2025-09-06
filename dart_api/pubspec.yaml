@@ -1,0 +1,13 @@
+name: talos_api
+description: Generated Talos gRPC/protobuf API clients.
+version: 0.1.0
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  
+dependencies:
+  grpc: ^4.2.0
+  protobuf: ^4.2.0
+
+dev_dependencies:
+  lints: ^6.0.0
