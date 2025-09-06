@@ -51,43 +51,18 @@ fi
 LIB_DIR="$PACKAGE_ROOT/lib"
 SRC_DIR="$LIB_DIR/src"
 
-# Proto files to include (exclude vendor duplicates while still allowing vendor-only protos).
-# Updated implementation avoids Bash 4 associative arrays for macOS / older bash compatibility.
-# Strategy:
-#  1. Collect non-vendor protos first; record their relative import paths.
-#  2. Add vendor protos only if there is no non-vendor counterpart.
-#  3. Allow override with INCLUDE_VENDOR_DUPLICATES=1 to include everything.
+# Proto files to include (exclude vendor copies except as import roots).
 PROTO_FILES=()
-if [[ "${INCLUDE_VENDOR_DUPLICATES:-0}" == "1" ]]; then
-	while IFS= read -r file; do PROTO_FILES+=("$file"); done < <(find "$PROTO_ROOT" -type f -name '*.proto' | sort)
-else
-	NON_VENDOR_KEYS_FILE=$(mktemp)
-	# First pass: non-vendor protos
-	while IFS= read -r file; do
-		rel="${file#"$PROTO_ROOT/"}"
-		[[ $rel == vendor/* ]] && continue
-		PROTO_FILES+=("$file")
-		echo "$rel" >> "$NON_VENDOR_KEYS_FILE"
-	done < <(find "$PROTO_ROOT" -type f -name '*.proto' | sort)
-	# Second pass: vendor-only protos
-	if [[ -d "$VENDOR_DIR" ]]; then
-		while IFS= read -r file; do
-			rel="${file#"$VENDOR_DIR/"}"
-			# Include only if not present among non-vendor protos
-			if ! grep -Fxq "$rel" "$NON_VENDOR_KEYS_FILE"; then
-				PROTO_FILES+=("$file")
-			fi
-		done < <(find "$VENDOR_DIR" -type f -name '*.proto' | sort)
-	fi
-	rm -f "$NON_VENDOR_KEYS_FILE" || true
-fi
+while IFS= read -r file; do
+	PROTO_FILES+=("$file")
+done < <(find "$PROTO_ROOT" -type f -name '*.proto' -not -path '*/vendor/*' | sort)
 
 if [[ ${#PROTO_FILES[@]} -eq 0 ]]; then
-	echo "No .proto files found under $PROTO_ROOT (after duplicate filtering)" >&2
+	echo "No .proto files found under $PROTO_ROOT" >&2
 	exit 1
 fi
 
-echo "Found ${#PROTO_FILES[@]} proto files to compile (after filtering duplicates)."
+echo "Found ${#PROTO_FILES[@]} proto files to compile."
 
 need_cmd() { command -v "$1" >/dev/null 2>&1 || { echo "Error: required command '$1' not found in PATH" >&2; exit 1; }; }
 need_cmd protoc
