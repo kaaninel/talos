@@ -26,7 +26,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$SCRIPT_DIR"
 
 PROTO_ROOT="$REPO_ROOT/api"
-VENDOR_DIR="$PROTO_ROOT/vendor"
 
 # Allow caller to set OUT_DIR, otherwise default (public path under lib/).
 OUT_DIR="${OUT_DIR:-$REPO_ROOT/dart_api/lib/generated}"
@@ -102,13 +101,7 @@ YAML
 fi
 
 echo "Generating Dart sources into $OUT_DIR"
-
-INCLUDE_ARGS=( -I"$PROTO_ROOT" )
-[[ -d "$VENDOR_DIR" ]] && INCLUDE_ARGS+=( -I"$VENDOR_DIR" )
-
-protoc \
-	"${INCLUDE_ARGS[@]}" \
-	--dart_out=grpc:"$OUT_DIR" 
+protoc -I "$PROTO_ROOT" --dart_out=grpc:"$OUT_DIR" 
 
 echo "Generation complete. Files under: $OUT_DIR"
 echo "Next steps:"
