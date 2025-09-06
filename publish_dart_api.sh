@@ -37,14 +37,6 @@ fi
 # Create orphan branch (no history)
 git checkout --orphan "$BRANCH_NAME"
 
-# Remove all tracked files from index and working tree (except .git)
-# Use git ls-files to avoid deleting ignored/untracked control files accidentally
-#if git ls-files -z | grep -q .; then
-#  git ls-files -z | xargs -0 rm -f
-#fi
-# Remove remaining untracked (except dart_api which we still need temporarily)
-find . -mindepth 1 -maxdepth 1 ! -name '.git' ! -name 'dart_api' -exec rm -rf {} +
-
 # Copy contents of dart_api/ into repository root (including dotfiles)
 # Use rsync for robustness
 TMPDIR=$(mktemp -d)

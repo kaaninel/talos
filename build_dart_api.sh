@@ -52,18 +52,6 @@ LIB_DIR="$PACKAGE_ROOT/lib"
 SRC_DIR="$LIB_DIR/src"
 
 # Proto files to include (exclude vendor copies except as import roots).
-PROTO_FILES=()
-while IFS= read -r file; do
-	PROTO_FILES+=("$file")
-done < <(find "$PROTO_ROOT" -type f -name '*.proto' -not -path '*/vendor/*' | sort)
-
-if [[ ${#PROTO_FILES[@]} -eq 0 ]]; then
-	echo "No .proto files found under $PROTO_ROOT" >&2
-	exit 1
-fi
-
-echo "Found ${#PROTO_FILES[@]} proto files to compile."
-
 need_cmd() { command -v "$1" >/dev/null 2>&1 || { echo "Error: required command '$1' not found in PATH" >&2; exit 1; }; }
 need_cmd protoc
 
