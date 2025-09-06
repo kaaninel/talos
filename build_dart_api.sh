@@ -51,18 +51,49 @@ fi
 LIB_DIR="$PACKAGE_ROOT/lib"
 SRC_DIR="$LIB_DIR/src"
 
-# Proto files to include (exclude vendor copies except as import roots).
+# Proto files to include (exclude vendor duplicates while still allowing vendor-only protos).
+# Previous logic included every .proto (including vendor duplicates) causing duplicate descriptor errors
+# like: CheckedExpr.reference_map already defined. We now:
+#  1. Collect all protos.
+#  2. If a proto exists both at api/path.proto and api/vendor/path.proto, prefer the non-vendor copy.
+#  3. Include vendor-only protos (no non-vendor counterpart) so generated code is complete.
+#  4. Allow override via INCLUDE_VENDOR_DUPLICATES=1.
 PROTO_FILES=()
-while IFS= read -r file; do
-	PROTO_FILES+=("$file")
-done < <(find "$PROTO_ROOT" -type f -name '*.proto' | sort)
+if [[ "${INCLUDE_VENDOR_DUPLICATES:-0}" == "1" ]]; then
+	while IFS= read -r file; do PROTO_FILES+=("$file"); done < <(find "$PROTO_ROOT" -type f -name '*.proto' | sort)
+else
+	# Build associative map of chosen files keyed by import path.
+	declare -A chosen
+	# First pass: prefer non-vendor files.
+	while IFS= read -r file; do
+		rel="${file#"$PROTO_ROOT/"}"
+		# Skip vendor path in first pass.
+		[[ $rel == vendor/* ]] && continue
+		chosen["$rel"]="$file"
+	done < <(find "$PROTO_ROOT" -type f -name '*.proto' | sort)
+	# Second pass: add vendor-only files (no non-vendor duplicate).
+	if [[ -d "$VENDOR_DIR" ]]; then
+		while IFS= read -r file; do
+			rel="${file#"$PROTO_ROOT/"}"
+			[[ $rel != vendor/* ]] && continue
+			import_path="${rel#vendor/}"
+			if [[ -z "${chosen[$import_path]:-}" ]]; then
+				chosen["$import_path"]="$file"
+			fi
+		done < <(find "$VENDOR_DIR" -type f -name '*.proto' | sort)
+	fi
+	# Emit in sorted order by key (import path) for determinism.
+	for k in $(printf '%s\n' "${!chosen[@]}" | sort); do
+		PROTO_FILES+=("${chosen[$k]}")
+	done
+fi
 
 if [[ ${#PROTO_FILES[@]} -eq 0 ]]; then
-	echo "No .proto files found under $PROTO_ROOT" >&2
+	echo "No .proto files found under $PROTO_ROOT (after duplicate filtering)" >&2
 	exit 1
 fi
 
-echo "Found ${#PROTO_FILES[@]} proto files to compile."
+echo "Found ${#PROTO_FILES[@]} proto files to compile (after filtering duplicates)."
 
 need_cmd() { command -v "$1" >/dev/null 2>&1 || { echo "Error: required command '$1' not found in PATH" >&2; exit 1; }; }
 need_cmd protoc
