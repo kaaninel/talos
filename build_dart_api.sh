@@ -100,7 +100,7 @@ dev_dependencies:
 YAML
 fi
 
-echo "Generating Dart sources into $OUT_DIR"
+echo "Generating Dart sources into $OUT_DIR from $PROTO_ROOT"
 protoc -I "$PROTO_ROOT" $(find "$PROTO_ROOT" -iname "*.proto") --dart_out=grpc:"$OUT_DIR"
 
 echo "Generation complete. Files under: $OUT_DIR"
