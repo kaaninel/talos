@@ -55,7 +55,7 @@ SRC_DIR="$LIB_DIR/src"
 PROTO_FILES=()
 while IFS= read -r file; do
 	PROTO_FILES+=("$file")
-done < <(find "$PROTO_ROOT" -type f -name '*.proto' -not -path '*/vendor/*' | sort)
+done < <(find "$PROTO_ROOT" -type f -name '*.proto' | sort)
 
 if [[ ${#PROTO_FILES[@]} -eq 0 ]]; then
 	echo "No .proto files found under $PROTO_ROOT" >&2
