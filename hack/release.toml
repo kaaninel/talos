@@ -1,0 +1,65 @@
+# commit to be tagged for new release
+commit = "HEAD"
+
+project_name = "Talos"
+github_repo = "siderolabs/talos"
+match_deps = "^github.com/((talos-systems|siderolabs)/[a-zA-Z0-9-]+)$"
+ignore_deps = ["github.com/coredns/coredns"]
+
+# previous release
+previous = "v1.11.0"
+
+pre_release = true
+
+preface = """
+"""
+
+[notes]
+    [notes.updates]
+        title = "Component Updates"
+        description = """\
+Linux: 6.16.4
+CNI Plugins: 1.8.0
+cryptsetup: 2.8.1
+LVM2: 2_03_34
+systemd-udevd: 257.8
+runc: 1.3.1
+
+Talos is built with Go 1.25.0.
+"""
+
+    [notes.luks2]
+        title = "Encrypted Volumes"
+        description = """\
+Talos Linux now consistently provides mapped names for encrypted volumes in the format `/dev/mapper/luks2-<volume-id>`.
+This change should not affect system or user volumes, but might allow easier identification of encrypted volumes,
+and specifically for raw encrypted volumes.
+"""
+
+    [notes.disk-encryption]
+        title = "Disk Encryption"
+        description = """\
+Talos versions prior to v1.12 used the state of PCR 7 and signed policies locked to PCR 11 for TPM based disk encryption.
+
+Talos now supports configuring which PCRs states are to be used for TPM based disk encryption via the `options.pcrs`
+field in the `tpm` section of the disk encryption configuration.
+
+If user doesn't specify any options Talos defaults to using PCR 7 for backwards compatibility with existing installations.
+
+This change was made to improve compatibility with systems that may have varying states in PCR 7 due to UEFI Secure Boot configurations
+and users may wish to disable locking to PCR 7 state entirely.
+
+Signed PCR policies will still be bound to PCR 11.
+
+The currently used PCR's can be seen with `talosctl get volumestatus <volume> -o yaml` command.
+"""
+
+[make_deps]
+
+    [make_deps.tools]
+        variable = "TOOLS"
+        repository = "github.com/siderolabs/tools"
+
+    [make_deps.pkgs]
+        variable = "PKGS"
+        repository = "github.com/siderolabs/pkgs"

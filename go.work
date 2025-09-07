@@ -1,0 +1,11 @@
+go 1.25.0
+
+use (
+	.
+	./hack/cloud-image-uploader
+	./pkg/machinery
+	./tools
+	./tools/docgen
+	./tools/gotagsrewrite
+	./tools/structprotogen
+)

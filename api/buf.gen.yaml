@@ -1,0 +1,22 @@
+version: v2
+plugins:
+  - remote: buf.build/connectrpc/dart
+    out: ../dart_api/lib
+  - remote: buf.build/protocolbuffers/dart
+    out: ../dart_api/lib
+    include_wkt: true
+    include_imports: true
+    # opt:
+    #   - grpc
+inputs:
+  - directory: .
+    paths:
+      - cluster/
+      - common/
+      - inspect/
+      - machine/
+      - resource/
+      - security/
+      - storage/
+      - time/
+      - google/
