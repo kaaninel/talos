@@ -26,7 +26,7 @@ echo "==> Rebased pull"
 git pull --rebase --autostash origin main
 
 echo "==> Building Dart API"
-./build_dart_api.sh
+buf generate
 
 echo "==> Publishing Dart API"
 ./publish_dart_api.sh

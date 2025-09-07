@@ -1,24 +1,13 @@
 version: v2
 plugins:
-  - local: ["go", "tool", "google.golang.org/protobuf/cmd/protoc-gen-go"]
-    out: ./machinery/api
-    opt:
-      - paths=source_relative
-  - local: ["go", "tool", "google.golang.org/grpc/cmd/protoc-gen-go-grpc"]
-    out: ./machinery/api
-    opt:
-      - paths=source_relative
-  - local: ["go", "tool", "github.com/planetscale/vtprotobuf/cmd/protoc-gen-go-vtproto"]
-    out: ./machinery/api
-    opt:
-      - paths=source_relative
-      - features=marshal+unmarshal+size
-  - local: ["go", "tool", "github.com/pseudomuto/protoc-gen-doc/cmd/protoc-gen-doc"]
-    strategy: all
-    out: ./docs/
-    opt:
-      - docs.markdown.tmpl
-      - api.md
+  - remote: buf.build/connectrpc/dart
+    out: ../dart_api/lib
+  - remote: buf.build/protocolbuffers/dart
+    out: ../dart_api/lib
+    include_wkt: true
+    include_imports: true
+    # opt:
+    #   - grpc
 inputs:
   - directory: .
     paths:
@@ -30,3 +19,4 @@ inputs:
       - security/
       - storage/
       - time/
+      - google/
