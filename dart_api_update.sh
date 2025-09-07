@@ -23,7 +23,7 @@ else
 fi
 
 echo "==> Rebased pull"
-git pull --rebase --autostash origin main
+git pull origin main --rebase --autostash
 
 echo "==> Building Dart API"
 buf generate
