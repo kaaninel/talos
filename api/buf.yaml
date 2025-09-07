@@ -1,8 +1,6 @@
 version: v2
 modules:
   - path: ./
-    excludes:
-      - vendor/
     breaking:
       use:
         - WIRE
@@ -15,10 +13,6 @@ modules:
           - security/
         ENUM_NO_ALLOW_ALIAS:
           - resource/definitions/enums/
-  - path: vendor/
-    lint:
-      ignore:
-        - vendor/
 
 lint:
   use:
